@@ -1,0 +1,12 @@
+{
+  "apt": [
+    "curl",
+    "wget"
+  ],
+  "flatpak": [
+    "cc.arduino.IDE2"
+  ],
+  "snap": [
+    "code"
+  ]
+}

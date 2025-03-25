@@ -1,51 +1,66 @@
-name: Build
+name: Build and Release
 on: [push]
 env:
-  # The project name specified in your Cargo.toml
+  # Nombre del proyecto definido en tu Cargo.toml
   PROJECT_NAME: package-vigilant
 jobs:
   build:
-    # Set the job to run on the platform specified by the matrix below
     runs-on: ${{ matrix.runner }}
- 
-    # Define the build matrix for cross-compilation
     strategy:
       matrix:
         include:
           - name: linux-amd64
             runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
- 
-    # The steps to run for each matrix item
     steps:
       - name: Checkout
         uses: actions/checkout@v3
- 
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: "${{ matrix.target }}"
- 
+
       - name: Setup Cache
         uses: Swatinem/rust-cache@v2
- 
+
       - name: Build Binary
         run: cargo build --verbose --locked --release --target ${{ matrix.target }}
- 
-      - name: Release Binary
+
+      - name: Preparar binario para release
         shell: bash
         run: |
           BIN_SUFFIX=""
           if [[ "${{ matrix.runner }}" == "windows-latest" ]]; then
             BIN_SUFFIX=".exe"
           fi
- 
-          # The built binary output location
+          # Ruta del binario compilado
           BIN_OUTPUT="target/${{ matrix.target }}/release/${PROJECT_NAME}${BIN_SUFFIX}"
- 
-          # Define a better name for the final binary
+          # Nombres para la release
           BIN_RELEASE="${PROJECT_NAME}-${{ matrix.name }}${BIN_SUFFIX}"
           BIN_RELEASE_VERSIONED="${PROJECT_NAME}-${{ github.ref_name }}-${{ matrix.name }}${BIN_SUFFIX}"
- 
-          # Move the built binary where you want it
-          mv "${BIN_OUTPUT}" "./<your-destination>/${BIN_RELEASE}"
+          # Copiamos el binario al directorio raíz con el nombre versionado
+          cp "${BIN_OUTPUT}" "./${BIN_RELEASE_VERSIONED}"
+          # Guardamos el nombre del asset en una variable de entorno para usarlo más adelante
+          echo "ASSET_NAME=${BIN_RELEASE_VERSIONED}" >> $GITHUB_ENV
+
+      - name: Crear release en GitHub
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Subir asset a la release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.ASSET_NAME }}
+          asset_name: ${{ env.ASSET_NAME }}
+          asset_content_type: application/octet-stream

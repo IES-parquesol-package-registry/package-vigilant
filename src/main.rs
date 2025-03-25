@@ -222,6 +222,10 @@ fn install_snap_package(name: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+trait TypeName {
+    fn type_name(&self) -> &'static str;
+}
+
 impl TypeName for Value {
     fn type_name(&self) -> &'static str {
         match self {

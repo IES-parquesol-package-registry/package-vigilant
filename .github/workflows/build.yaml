@@ -1,5 +1,11 @@
 name: Build and Release
-on: [push]
+on:
+  push:
+    branches:
+      - main
+
+permissions: write-all
+
 env:
   # Nombre del proyecto definido en tu Cargo.toml
   PROJECT_NAME: package-vigilant

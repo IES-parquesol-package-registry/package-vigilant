@@ -95,16 +95,15 @@ fn process_packages(json_data: &Value) -> Result<(), Box<dyn Error>> {
             println!("Package registry version: {}", version);
         }
 
+        // updates all existing packages
         println!("\n====== Updating APT Repositories ======");
         let output = Command::new("sudo")
             .args(["apt-get", "update", "-y"])
             .output()?;
-
         println!("\n====== Updating APT Packages ======");
         let output = Command::new("sudo")
             .args(["apt-get", "upgrade", "-y"])
             .output()?;
-
         println!("\n====== Updating Flatpak Packages ======");
         let output = Command::new("flatpak")
             .args(["update", "-y"])

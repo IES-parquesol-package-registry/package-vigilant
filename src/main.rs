@@ -96,6 +96,21 @@ fn process_packages(json_data: &Value) -> Result<(), Box<dyn Error>> {
             println!("Package registry version: {}", version);
         }
 
+        println!("\n====== Updating APT Repositories ======");
+        let output = Command::new("sudo")
+            .args(["apt-get", "update", "-y"])
+            .output()?;
+
+        println!("\n====== Updating APT Packages ======");
+        let output = Command::new("sudo")
+            .args(["apt-get", "upgrade", "-y"])
+            .output()?;
+
+        println!("\n====== Updating Flatpak Packages ======");
+        let output = Command::new("flatpak")
+            .args(["update", "-y"])
+            .output()?;
+
         // Process apt packages
         if let Some(apt_packages) = map.get("apt").and_then(|v| v.as_array()) {
             println!("\n====== Installing APT Packages ======");
